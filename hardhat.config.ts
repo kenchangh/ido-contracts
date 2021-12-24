@@ -11,6 +11,7 @@ import { clearAuctionSimplified } from "./src/tasks/clear_auction_simplifed";
 import { generateSignatures } from "./src/tasks/generateSignatures";
 import { initiateAuction } from "./src/tasks/initiate_new_auction";
 import { placeManyOrders } from "./src/tasks/placeManyOrders";
+import { generateEncodedOrder } from "./src/tasks/generateEncodedOrder";
 
 const argv = yargs
   .option("network", {
@@ -53,6 +54,7 @@ clearAuction();
 clearAuctionSimplified();
 generateSignatures();
 placeManyOrders();
+generateEncodedOrder();
 
 export default {
   paths: {
