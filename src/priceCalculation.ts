@@ -120,8 +120,9 @@ export async function calculateClearingPrice(
   });
 
   printOrders(sellOrders, false, debug);
-  printOrders([initialOrder], true, debug);
+  // printOrders([initialOrder], true, debug);
   const clearingPriceOrder = findClearingPrice(sellOrders, initialOrder);
+  console.log(clearingPriceOrder)
   printOrders([clearingPriceOrder], false, debug);
   const interimOrder = await getInterimOrder(easyAuction, auctionId);
   printOrders([interimOrder], false, debug);
@@ -175,7 +176,7 @@ function printOrders(orders: Order[], isInitialOrder: boolean, debug = false) {
         " for ",
         order.buyAmount.toString(),
         " at price of",
-        order.buyAmount.div(order.sellAmount).toString(),
+        order.sellAmount.mul(BigNumber.from(10).pow(10)).div(order.buyAmount).toString(),
       );
     });
   }
@@ -202,16 +203,13 @@ export function findClearingPrice(
         .div(order.sellAmount)
         .gte(initialAuctionOrder.sellAmount)
     ) {
-      const coveredBuyAmount = initialAuctionOrder.sellAmount.sub(
-        totalSellVolume
+      const coveredBuyAmount = totalSellVolume
           .sub(order.sellAmount)
           .mul(order.buyAmount)
-          .div(order.sellAmount),
-      );
-      const sellAmountClearingOrder = coveredBuyAmount
-        .mul(order.sellAmount)
-        .div(order.buyAmount);
-      if (sellAmountClearingOrder.gt(BigNumber.from(0))) {
+          .div(order.sellAmount);
+
+
+      if (totalSellVolume.gt(BigNumber.from(0))) {
         return order;
       } else {
         return {
@@ -259,9 +257,14 @@ export async function getAllSellOrders(
     return order;
   });
 
-  const filterOrderCancellations = easyAuction.filters.CancellationSellOrder;
+  const filterOrderCancellations = easyAuction.filters.CancellationSellOrder(
+    auctionId,
+    null,
+    null,
+    null,
+  );
   const logsForCancellations = await easyAuction.queryFilter(
-    filterOrderCancellations(),
+    filterOrderCancellations,
     0,
     "latest",
   );
@@ -276,9 +279,19 @@ export async function getAllSellOrders(
     };
     return order;
   });
-  for (const orderDeletion of sellOrdersDeletions) {
-    sellOrders.splice(sellOrders.indexOf(orderDeletion), 1);
-  }
+
+  sellOrdersDeletions.forEach((orderDeletion) => {
+    sellOrders.forEach((sellOrder, sellOrderIndex) => {
+      if (
+        orderDeletion.userId.eq(sellOrder.userId) &&
+        orderDeletion.buyAmount.eq(sellOrder.buyAmount) &&
+        orderDeletion.sellAmount.eq(sellOrder.sellAmount)
+      ) {
+        sellOrders.splice(sellOrderIndex, 1);
+      }
+    });
+  });
+
   return sellOrders;
 }
 

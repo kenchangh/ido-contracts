@@ -12,6 +12,7 @@ import { generateSignatures } from "./src/tasks/generateSignatures";
 import { initiateAuction } from "./src/tasks/initiate_new_auction";
 import { placeManyOrders } from "./src/tasks/placeManyOrders";
 import { generateEncodedOrder } from "./src/tasks/generateEncodedOrder";
+import { parseAuctions } from "./src/tasks/parse_auction";
 
 const argv = yargs
   .option("network", {
@@ -55,6 +56,7 @@ clearAuctionSimplified();
 generateSignatures();
 placeManyOrders();
 generateEncodedOrder();
+parseAuctions();
 
 export default {
   paths: {
@@ -133,6 +135,7 @@ export default {
     },
     avax: {
       ...sharedNetworkConfig,
+      chainId: 43114,
       url: "https://api.avax.network/ext/bc/C/rpc",
       gasPrice: GAS_PRICE_GWEI
         ? parseInt(
